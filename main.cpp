@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <stdlib.h>
 
-using Time = std::chrono::microseconds;
+using Time = std::chrono::milliseconds;
 
 const unsigned short int _lut[] = 
 {
@@ -51,33 +51,36 @@ unsigned short int calculate(unsigned char * data, int size)
 
     for (int i = 0; i < size; i++)
     {
-        auto pos = (crc ^ (_reverse[data[i]] << 8)) >> 8;
-
-        crc = (crc << 8) ^ (_lut[pos]);
+        crc = (crc << 8) ^ (_lut[(crc ^ (data[i] << 8)) >> 8]);
     }
 
-    auto b0 = _reverse[(crc >> 8)];
-    auto b1 = _reverse[(crc & 0xff)];
-
-    return (b0 << 8 | b1);
+    return crc;
 }
-
 
 int main(int argc, char * argv[])
 {
-    unsigned short int crc;
     auto iterations = atoi(argv[1]);
     auto size = argc - 2;
     unsigned char data[256];
     
     if (size > 256) exit(1);
 
+    printf("Data check passed ... ([%d] hex digits filled into 256 byte buffer)\n", size);
+    printf("Data = [");
+
     for (int i = 0; i < size; i++)
     {
-        sscanf(argv[i + 2],"%x",&data[i]);
-        printf("data %d = %d\n", i, data[i]);
+        sscanf(argv[i + 2], "%x", &data[i]);
+        if (i < size - 1) printf("0x%02x ", data[i]);
+        else printf("0x%02x", data[i]);
+        data[i] = _reverse[data[i]];
     }
     
+    printf("]\n");
+    printf("Starting MODBUS CRC test over [%d] iterations ...\n", iterations);
+
+    unsigned short int crc;
+
     auto start = std::chrono::steady_clock::now();
 
     for (int i = 0; i < iterations; i++)
@@ -87,5 +90,10 @@ int main(int argc, char * argv[])
 
     auto ms = std::chrono::duration_cast<Time>(std::chrono::steady_clock::now() - start).count();
 
-    printf("crc = 0x%04x, ms = %ld\n", crc, ms);
+    auto b0 = _reverse[(crc >> 8)];
+    auto b1 = _reverse[(crc & 0xff)];
+
+    crc = (b0 << 8 | b1);
+
+    printf("Test finished. Calculated CRC = [0x%04x], Time elapsed = [%ld] ms\n", crc, ms);
 }
