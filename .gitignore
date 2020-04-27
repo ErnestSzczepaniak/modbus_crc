@@ -3,3 +3,4 @@ build/*
 doxygen/*
 !doxygen/DoxygenConfigBasic
 dump/*
+main.elf
