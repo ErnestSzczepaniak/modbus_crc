@@ -4,3 +4,4 @@ doxygen/*
 !doxygen/DoxygenConfigBasic
 dump/*
 main.elf
+.vscode/*
