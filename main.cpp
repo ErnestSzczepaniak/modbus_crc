@@ -1,6 +1,7 @@
 #include <chrono>
 #include "stdio.h"
 #include <cstdint>
+#include <stdlib.h>
 
 using Time = std::chrono::microseconds;
 
@@ -62,17 +63,26 @@ unsigned short int calculate(unsigned char * data, int size)
 }
 
 
-int main()
+int main(int argc, char * argv[])
 {
-    int iterations = 1000000;
-    auto start = std::chrono::steady_clock::now();
-
-    unsigned char tab[] = {0x00, 0x11, 0x22, 0x33};
     unsigned short int crc;
+    auto iterations = atoi(argv[1]);
+    auto size = argc - 2;
+    unsigned char data[256];
+    
+    if (size > 256) exit(1);
+
+    for (int i = 0; i < size; i++)
+    {
+        sscanf(argv[i + 2],"%x",&data[i]);
+        printf("data %d = %d\n", i, data[i]);
+    }
+    
+    auto start = std::chrono::steady_clock::now();
 
     for (int i = 0; i < iterations; i++)
     {
-        crc = calculate(tab, sizeof(tab));
+        crc = calculate(data, size);
     }
 
     auto ms = std::chrono::duration_cast<Time>(std::chrono::steady_clock::now() - start).count();
