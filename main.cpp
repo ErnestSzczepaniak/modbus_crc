@@ -51,10 +51,13 @@ unsigned short int calculate(unsigned char * data, int size)
 
     for (int i = 0; i < size; i++)
     {
-        crc = (crc << 8) ^ (_lut[(crc ^ (data[i] << 8)) >> 8]);
+        crc = (crc << 8) ^ (_lut[(crc ^ (_reverse[data[i]] << 8)) >> 8]);
     }
 
-    return crc;
+    auto b0 = _reverse[(crc >> 8)];
+    auto b1 = _reverse[(crc & 0xff)];
+
+    return (b0 << 8 | b1);
 }
 
 int main(int argc, char * argv[])
@@ -73,7 +76,6 @@ int main(int argc, char * argv[])
         sscanf(argv[i + 2], "%x", &data[i]);
         if (i < size - 1) printf("0x%02x ", data[i]);
         else printf("0x%02x", data[i]);
-        data[i] = _reverse[data[i]];
     }
     
     printf("]\n");
@@ -89,11 +91,6 @@ int main(int argc, char * argv[])
     }
 
     auto ms = std::chrono::duration_cast<Time>(std::chrono::steady_clock::now() - start).count();
-
-    auto b0 = _reverse[(crc >> 8)];
-    auto b1 = _reverse[(crc & 0xff)];
-
-    crc = (b0 << 8 | b1);
 
     printf("Test finished. Calculated CRC = [0x%04x], Time elapsed = [%ld] ms\n", crc, ms);
 }
